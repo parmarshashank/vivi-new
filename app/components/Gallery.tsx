@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 const galleryImages = [
   {
-    src: '/images/gallery/8.png',
+    src: '/images/gallery/image1.JPG',
     title: 'Chamber of Thoughts',
     description: 'A moment of solitude in the urban jungle. Where thoughts echo against concrete walls.',
     date: '2024'
