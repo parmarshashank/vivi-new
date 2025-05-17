@@ -45,7 +45,7 @@ const teamMembers: TeamMember[] = [
     image: "/images/team/3.jpg",
     location: "Stockholm",
     quote:
-      "If you'd asked the kid version of me what I wanted to be when I grew up, I would've definitely told you \"teddy bear surgeon\". Looking back, I guess I wasn't far off!",
+      "If you&apos;d asked the kid version of me what I wanted to be when I grew up, I would&apos;ve definitely told you \"teddy bear surgeon\". Looking back, I guess I wasn&apos;t far off!",
     socials: {
       linkedin: "https://linkedin.com/",
       twitter: "https://twitter.com/",
