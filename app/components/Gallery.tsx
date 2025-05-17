@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 const galleryImages = [
   {
@@ -74,10 +75,13 @@ const Gallery = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
               {/* Image Card */}
               <div className="relative aspect-[4/5] overflow-hidden">
-                <img
+                <Image
                   src={galleryImages[currentIndex].src}
                   alt={galleryImages[currentIndex].title}
-                  className="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-700"
+                  fill
+                  className="object-cover filter grayscale hover:grayscale-0 transition-all duration-700"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent h-1/4"></div>
                 <div className="absolute bottom-6 left-6">

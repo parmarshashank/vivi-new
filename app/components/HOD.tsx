@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 const HOD = () => {
   return (
     <section className="py-32">
@@ -5,10 +7,13 @@ const HOD = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
           {/* Image */}
           <div className="relative aspect-[3/4] overflow-hidden">
-            <img
-              src="images/team/hodSirPfp.jpeg"
+            <Image
+              src="/images/team/hodSirPfp.jpeg"
               alt="Head of Department"
-              className="w-full h-full object-cover transition-all duration-500 filter grayscale hover:grayscale-0"
+              fill
+              className="object-cover transition-all duration-500 filter grayscale hover:grayscale-0"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
             <div className="absolute bottom-8 left-8">
