@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 const About = () => {
   return (
     <section className="py-16 md:py-24 lg:py-32 min-h-screen bg-[#111111] relative">
@@ -43,31 +45,43 @@ const About = () => {
           <div className="relative h-[400px] md:h-[500px] lg:h-[600px] mt-8 lg:mt-0">
             {/* Image 1 - Back */}
             <div className="absolute top-4 right-4 w-3/5 h-3/5 overflow-hidden">
-              <img
-                src="/images/a1.jpeg"
-                alt="Creative Process"
-                className="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-700"
-              />
+              <div className="relative w-full h-full">
+                <Image
+                  src="/images/a1.jpeg"
+                  alt="Creative Process"
+                  fill
+                  className="object-cover filter grayscale hover:grayscale-0 transition-all duration-700"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
               <div className="absolute inset-0 bg-black/10"></div>
             </div>
 
             {/* Image 2 - Middle */}
             <div className="absolute top-24 left-4 w-2/5 h-2/5 z-10 overflow-hidden">
-              <img
-                src="/images/a2.jpeg"
-                alt="Design Thinking"
-                className="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-700"
-              />
+              <div className="relative w-full h-full">
+                <Image
+                  src="/images/a2.jpeg"
+                  alt="Design Thinking"
+                  fill
+                  className="object-cover filter grayscale hover:grayscale-0 transition-all duration-700"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
+              </div>
               <div className="absolute inset-0 bg-black/10"></div>
             </div>
 
             {/* Image 3 - Front */}
             <div className="absolute bottom-8 right-16 w-2/5 h-2/5 z-20 overflow-hidden">
-              <img
-                src="/images/a3.jpeg"
-                alt="Team Collaboration"
-                className="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-700"
-              />
+              <div className="relative w-full h-full">
+                <Image
+                  src="/images/a3.jpeg"
+                  alt="Team Collaboration"
+                  fill
+                  className="object-cover filter grayscale hover:grayscale-0 transition-all duration-700"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
+              </div>
               <div className="absolute inset-0 bg-black/10"></div>
             </div>
 

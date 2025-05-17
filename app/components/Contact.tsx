@@ -26,7 +26,7 @@ const Contact = () => {
     <section className="py-16 md:py-24 lg:py-32 bg-[#111111]">
       <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16 md:mb-24">
-          <h2 className="section-title text-2xl md:text-3xl lg:text-4xl">Let's Connect</h2>
+          <h2 className="section-title text-2xl md:text-3xl lg:text-4xl">Let&apos;s Connect</h2>
           <p className="text-gray-400 mt-3 md:mt-4 font-light text-base md:text-lg">
             Share your thoughts, ideas, or just say hello
           </p>
