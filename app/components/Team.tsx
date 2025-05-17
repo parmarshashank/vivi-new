@@ -146,7 +146,7 @@ const Team = () => {
         </div>
       </div>
 
-      <div
+      <div 
         ref={scrollContainerRef}
         className="flex overflow-x-auto hide-scrollbar gap-6 md:gap-12 lg:gap-24 px-4 md:px-8 lg:px-12 pb-8 md:pb-10 snap-x snap-mandatory"
         style={{
