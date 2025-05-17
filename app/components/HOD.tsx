@@ -12,7 +12,7 @@ const HOD = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
             <div className="absolute bottom-8 left-8">
-              <span className="date-stamp">— Since 2020</span>
+              <span className="date-stamp">— HOD CSE-AI</span>
             </div>
           </div>
 
@@ -20,7 +20,7 @@ const HOD = () => {
           <div className="space-y-8">
             <div>
               <h2 className="text-4xl mb-3">Head of Department</h2>
-              <span className="text-gray-400 text-lg">Prof. Sarah Mitchell</span>
+              <span className="text-gray-400 text-lg">Dr. Sanjeev Pippal</span>
             </div>
             
             <div className="space-y-4 text-gray-300 font-light">
