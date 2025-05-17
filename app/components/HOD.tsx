@@ -25,8 +25,8 @@ const HOD = () => {
             
             <div className="space-y-4 text-gray-300 font-light">
               <p>
-                "In the quiet moments between chaos and clarity, we find our true direction. 
-                Leading this department has been a journey of constant reflection and growth."
+                &ldquo;In the quiet moments between chaos and clarity, we find our true direction. 
+                Leading this department has been a journey of constant reflection and growth.&rdquo;
               </p>
               <p>
                 Every student here carries a unique perspective, a distinct voice waiting 

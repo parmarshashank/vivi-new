@@ -249,7 +249,7 @@ const Team = () => {
                   transition={{ duration: 0.4 }}
                   className="absolute left-0 top-0 w-[90%] h-full bg-black p-4 md:p-8 flex items-center z-[2]"
                 >
-                  <p className="text-base md:text-lg font-light leading-relaxed text-white">"{member.quote}"</p>
+                  <p className="text-base md:text-lg font-light leading-relaxed text-white">&ldquo;{member.quote}&rdquo;</p>
                 </motion.div>
               )}
             </div>
