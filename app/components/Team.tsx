@@ -2,100 +2,131 @@
 import { useState, useRef, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { motion } from "framer-motion"
-import { FaLinkedin, FaTwitter } from "react-icons/fa"
+import { FaLinkedin, FaTwitter, FaGithub } from "react-icons/fa"
 import Image from 'next/image'
+import { useAuth } from '../context/AuthContext'
 
 interface TeamMember {
+  _id: string
   name: string
   role: string
-  image: string
-  location: string
-  quote: string
-  socials: {
+  description: string
+  order: number
+  socialLinks: {
     linkedin: string
     twitter: string
+    github: string
   }
+  createdAt: string
 }
-
-const teamMembers: TeamMember[] = [
-  {
-    name: "Faculty Member 1",
-    role: "Associate Professor",
-    image: "/images/team/fac1.jpg",
-    location: "Stockholm",
-    quote: "Education is not the filling of a pail, but the lighting of a fire.",
-    socials: {
-      linkedin: "https://linkedin.com/",
-      twitter: "https://twitter.com/",
-    },
-  },
-  {
-    name: "Faculty Member 2",
-    role: "Assistant Professor",
-    image: "/images/team/fac2.jpg",
-    location: "New York",
-    quote: "The function of education is to teach one to think intensively and to think critically.",
-    socials: {
-      linkedin: "https://linkedin.com/",
-      twitter: "https://twitter.com/",
-    },
-  },
-  {
-    name: "James Wilson",
-    role: "Technical Lead",
-    image: "/images/team/3.jpg",
-    location: "Stockholm",
-    quote:
-      "If you&apos;d asked the kid version of me what I wanted to be when I grew up, I would&apos;ve definitely told you \"teddy bear surgeon\". Looking back, I guess I wasn&apos;t far off!",
-    socials: {
-      linkedin: "https://linkedin.com/",
-      twitter: "https://twitter.com/",
-    },
-  },
-  {
-    name: "Nina Patel",
-    role: "Event Coordinator",
-    image: "/images/team/rudra.enc",
-    location: "Stockholm",
-    quote: "Details make perfection, and perfection is not a detail.",
-    socials: {
-      linkedin: "https://linkedin.com/",
-      twitter: "https://twitter.com/",
-    },
-  },
-  {
-    name: "David Kim",
-    role: "Visual Designer",
-    image: "/images/team/pratiksha.enc",
-    location: "New York",
-    quote: "Everything has beauty, but not everyone sees it.",
-    socials: {
-      linkedin: "https://linkedin.com/",
-      twitter: "https://twitter.com/",
-    },
-  },
-  {
-    name: "Sarah Johnson",
-    role: "Content Strategist",
-    image: "/images/team/6.jpg",
-    location: "Stockholm",
-    quote: "Words are, in my not so humble opinion, our most inexhaustible source of magic.",
-    socials: {
-      
-      linkedin: "https://linkedin.com/",
-      twitter: "https://twitter.com/",
-    },
-  },
-]
 
 const Team = () => {
   const [isClient, setIsClient] = useState(false)
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const { isAuthenticated, token } = useAuth()
+
+  // Form states for adding/editing
+  const [isEditing, setIsEditing] = useState(false)
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
+  const [formData, setFormData] = useState({
+    name: '',
+    role: '',
+    description: '',
+    image: null as File | null,
+    linkedin: '',
+    twitter: '',
+    github: '',
+  })
 
   useEffect(() => {
     setIsClient(true)
+    fetchTeamMembers()
   }, [])
+
+  const fetchTeamMembers = async () => {
+    try {
+      const response = await fetch('/api/team')
+      if (!response.ok) throw new Error('Failed to fetch team members')
+      const data = await response.json()
+      setTeamMembers(data)
+      setIsLoading(false)
+    } catch (err) {
+      setError('Failed to load team members')
+      setIsLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const form = new FormData()
+    form.append('name', formData.name)
+    form.append('role', formData.role)
+    form.append('description', formData.description)
+    form.append('linkedin', formData.linkedin)
+    form.append('twitter', formData.twitter)
+    form.append('github', formData.github)
+    if (formData.image) {
+      form.append('image', formData.image)
+    }
+
+    try {
+      const url = editingMember ? '/api/team' : '/api/team'
+      const method = editingMember ? 'PUT' : 'POST'
+      if (editingMember) {
+        form.append('id', editingMember._id)
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: form,
+      })
+
+      if (!response.ok) throw new Error('Failed to save member')
+      
+      await fetchTeamMembers()
+      setIsEditing(false)
+      setEditingMember(null)
+      setFormData({
+        name: '',
+        role: '',
+        description: '',
+        image: null,
+        linkedin: '',
+        twitter: '',
+        github: '',
+      })
+    } catch (err) {
+      setError('Failed to save member')
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this member?')) return
+
+    try {
+      const response = await fetch(`/api/team`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id }),
+      })
+
+      if (!response.ok) throw new Error('Failed to delete member')
+      
+      await fetchTeamMembers()
+    } catch (err) {
+      setError('Failed to delete member')
+    }
+  }
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
@@ -109,12 +140,23 @@ const Team = () => {
     }
   }
 
-  if (!isClient) {
+  if (!isClient || isLoading) {
     return (
       <section className="bg-white py-20">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold font-sans">In the Spotlight</h2>
-          <p className="text-xl mt-2 font-light">Meet the humans who shape our future</p>
+          <p className="text-xl mt-2 font-light">Loading...</p>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="bg-white py-20">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl font-bold font-sans">In the Spotlight</h2>
+          <p className="text-xl mt-2 font-light text-red-500">{error}</p>
         </div>
       </section>
     )
@@ -145,6 +187,123 @@ const Team = () => {
             </button>
           </div>
         </div>
+
+        {/* Admin Controls */}
+        {isAuthenticated && (
+          <div className="mt-8">
+            <button
+              onClick={() => {
+                setIsEditing(true)
+                setEditingMember(null)
+                setFormData({
+                  name: '',
+                  role: '',
+                  description: '',
+                  image: null,
+                  linkedin: '',
+                  twitter: '',
+                  github: '',
+                })
+              }}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+            >
+              Add New Member
+            </button>
+          </div>
+        )}
+
+        {/* Edit Form */}
+        {isAuthenticated && isEditing && (
+          <div className="mt-8 bg-gray-100 p-6 rounded">
+            <h3 className="text-xl mb-4">{editingMember ? 'Edit Member' : 'Add New Member'}</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm mb-2">Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full bg-white p-2 rounded border"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-2">Role</label>
+                <input
+                  type="text"
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="w-full bg-white p-2 rounded border"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-2">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full bg-white p-2 rounded border"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-2">Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
+                  className="w-full bg-white p-2 rounded border"
+                  required={!editingMember}
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-2">LinkedIn URL</label>
+                <input
+                  type="url"
+                  value={formData.linkedin}
+                  onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                  className="w-full bg-white p-2 rounded border"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-2">Twitter URL</label>
+                <input
+                  type="url"
+                  value={formData.twitter}
+                  onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+                  className="w-full bg-white p-2 rounded border"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-2">GitHub URL</label>
+                <input
+                  type="url"
+                  value={formData.github}
+                  onChange={(e) => setFormData({ ...formData, github: e.target.value })}
+                  className="w-full bg-white p-2 rounded border"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+                >
+                  {editingMember ? 'Update' : 'Create'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(false)
+                    setEditingMember(null)
+                  }}
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
 
       <div 
@@ -158,7 +317,7 @@ const Team = () => {
       >
         {teamMembers.map((member, index) => (
           <div 
-            key={index}
+            key={member._id}
             className="relative flex-shrink-0 snap-start"
             style={{ width: "280px", maxWidth: "100vw - 2rem" }}
             onMouseEnter={() => setActiveIndex(index)}
@@ -166,7 +325,7 @@ const Team = () => {
           >
             <div className="relative">
               {/* Pink blob decoration that appears on hover */}
-              {activeIndex === index && (
+              {activeIndex === index &&
                 <>
                   <motion.div
                     initial={{ scale: 0, opacity: 0 }}
@@ -200,43 +359,49 @@ const Team = () => {
                     }}
                   />
                 </>
-              )}
+              }
 
               {/* Location and Social Links */}
               <div className="absolute -right-2 md:-right-6 top-0 z-[3] h-full flex flex-col items-center justify-start pt-4 gap-3">
-                {/* Location dot and text */}
-                <div className="flex items-center gap-2 transform -rotate-90 origin-left translate-y-12 translate-x-4 md:translate-x-6">
-                  <div className="h-1 w-1 bg-gray-900 rounded-full"></div>
-                  <span className="text-[10px] md:text-xs uppercase tracking-widest font-light text-gray-900 whitespace-nowrap">
-                    {member.location}
-                  </span>
-                </div>
-
                 {/* Social Links */}
                 <div className="flex flex-col gap-4 mt-16 md:mt-20">
-                  <a 
-                    href={member.socials.linkedin} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-gray-700 hover:text-gray-900 transition-colors"
-                  >
-                    <FaLinkedin className="w-3 h-3 md:w-4 md:h-4" />
-                  </a>
-                  <a 
-                    href={member.socials.twitter} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-gray-700 hover:text-gray-900 transition-colors"
-                  >
-                    <FaTwitter className="w-3 h-3 md:w-4 md:h-4" />
-                  </a>
+                  {member.socialLinks.linkedin && (
+                    <a 
+                      href={member.socialLinks.linkedin}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-gray-700 hover:text-gray-900 transition-colors"
+                    >
+                      <FaLinkedin className="w-3 h-3 md:w-4 md:h-4" />
+                    </a>
+                  )}
+                  {member.socialLinks.twitter && (
+                    <a 
+                      href={member.socialLinks.twitter}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-gray-700 hover:text-gray-900 transition-colors"
+                    >
+                      <FaTwitter className="w-3 h-3 md:w-4 md:h-4" />
+                    </a>
+                  )}
+                  {member.socialLinks.github && (
+                    <a 
+                      href={member.socialLinks.github}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-gray-700 hover:text-gray-900 transition-colors"
+                    >
+                      <FaGithub className="w-3 h-3 md:w-4 md:h-4" />
+                    </a>
+                  )}
                 </div>
               </div>
 
               {/* Main image container */}
               <div className="relative z-[2] aspect-[3/4] overflow-hidden">
                 <Image
-                  src={member.image || "/placeholder.svg"}
+                  src={`/api/team/${member._id}/image`}
                   alt={member.name}
                   fill
                   className="object-cover filter grayscale hover:scale-105 transition-transform duration-700"
@@ -253,8 +418,38 @@ const Team = () => {
                   transition={{ duration: 0.4 }}
                   className="absolute left-0 top-0 w-[90%] h-full bg-black p-4 md:p-8 flex items-center z-[2]"
                 >
-                  <p className="text-base md:text-lg font-light leading-relaxed text-white">&ldquo;{member.quote}&rdquo;</p>
+                  <p className="text-base md:text-lg font-light leading-relaxed text-white">&ldquo;{member.description}&rdquo;</p>
                 </motion.div>
+              )}
+
+              {/* Admin Controls */}
+              {isAuthenticated && activeIndex === index && (
+                <div className="absolute top-4 left-4 z-[3] flex gap-2">
+                  <button
+                    onClick={() => {
+                      setIsEditing(true)
+                      setEditingMember(member)
+                      setFormData({
+                        name: member.name,
+                        role: member.role,
+                        description: member.description,
+                        image: null,
+                        linkedin: member.socialLinks.linkedin,
+                        twitter: member.socialLinks.twitter,
+                        github: member.socialLinks.github,
+                      })
+                    }}
+                    className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(member._id)}
+                    className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
               )}
             </div>
 
@@ -265,17 +460,6 @@ const Team = () => {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* View all link */}
-      <div className="container mx-auto px-4 md:px-8 lg:px-12 mt-8 md:mt-12">
-        <a href="#" className="inline-flex items-center text-xs md:text-sm font-medium text-gray-900 hover:opacity-70 transition-opacity">
-          VIEW ALL IN THE SPOTLIGHTS
-          <svg className="ml-2 w-3 h-3 md:w-4 md:h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="11" stroke="currentColor" strokeWidth="2" />
-            <path d="M12 8L16 12L12 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </a>
       </div>
     </section>
   )
