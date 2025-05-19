@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { FaLinkedin, FaTwitter, FaGithub } from "react-icons/fa"
 import Image from 'next/image'
 import { useAuth } from '../context/AuthContext'
+import Modal from './Modal'
 
 interface TeamMember {
   _id: string
@@ -30,7 +31,7 @@ const Team = () => {
   const { isAuthenticated, token } = useAuth()
 
   // Form states for adding/editing
-  const [isEditing, setIsEditing] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
   const [formData, setFormData] = useState({
     name: '',
@@ -91,7 +92,7 @@ const Team = () => {
       if (!response.ok) throw new Error('Failed to save member')
       
       await fetchTeamMembers()
-      setIsEditing(false)
+      setIsModalOpen(false)
       setEditingMember(null)
       setFormData({
         name: '',
@@ -142,10 +143,12 @@ const Team = () => {
 
   if (!isClient || isLoading) {
     return (
-      <section className="bg-white py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold font-sans">In the Spotlight</h2>
-          <p className="text-xl mt-2 font-light">Loading...</p>
+      <section className="bg-white py-12 md:py-20 relative overflow-hidden">
+        <div className="container mx-auto px-4 md:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold font-sans text-gray-900">In the Spotlight</h2>
+            <p className="text-lg md:text-xl mt-2 font-light text-gray-700">Loading...</p>
+          </div>
         </div>
       </section>
     )
@@ -153,10 +156,12 @@ const Team = () => {
 
   if (error) {
     return (
-      <section className="bg-white py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold font-sans">In the Spotlight</h2>
-          <p className="text-xl mt-2 font-light text-red-500">{error}</p>
+      <section className="bg-white py-12 md:py-20 relative overflow-hidden">
+        <div className="container mx-auto px-4 md:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold font-sans text-gray-900">In the Spotlight</h2>
+            <p className="text-lg md:text-xl mt-2 font-light text-red-600">{error}</p>
+          </div>
         </div>
       </section>
     )
@@ -193,7 +198,7 @@ const Team = () => {
           <div className="mt-8">
             <button
               onClick={() => {
-                setIsEditing(true)
+                setIsModalOpen(true)
                 setEditingMember(null)
                 setFormData({
                   name: '',
@@ -212,255 +217,192 @@ const Team = () => {
           </div>
         )}
 
-        {/* Edit Form */}
-        {isAuthenticated && isEditing && (
-          <div className="mt-8 bg-gray-100 p-6 rounded">
-            <h3 className="text-xl mb-4">{editingMember ? 'Edit Member' : 'Add New Member'}</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm mb-2">Name</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-white p-2 rounded border"
-                  required
-                />
+        {/* Team Members Grid */}
+        <div 
+          ref={scrollContainerRef}
+          className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 overflow-x-auto"
+        >
+          {teamMembers.map((member, index) => (
+            <div key={member._id}>
+              <div 
+                className="relative group"
+                onMouseEnter={() => setActiveIndex(index)}
+                onMouseLeave={() => setActiveIndex(null)}
+              >
+                {/* Image Container */}
+                <div className="relative z-[2] aspect-[3/4] overflow-hidden">
+                  <Image
+                    src={`/api/team/${member._id}/image`}
+                    alt={member.name}
+                    fill
+                    className="object-cover filter grayscale hover:scale-105 transition-transform duration-700"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority
+                  />
+                </div>
+
+                {/* Black overlay with quote on hover */}
+                {activeIndex === index && (
+                  <div className="absolute left-0 top-0 w-[90%] h-full bg-black p-4 md:p-8 flex items-center z-[2]">
+                    <p className="text-base md:text-lg font-light leading-relaxed text-white">&ldquo;{member.description}&rdquo;</p>
+                  </div>
+                )}
+
+                {/* Admin Controls */}
+                {isAuthenticated && activeIndex === index && (
+                  <div className="absolute top-4 left-4 z-[3] flex gap-2">
+                    <button
+                      onClick={() => {
+                        setIsModalOpen(true)
+                        setEditingMember(member)
+                        setFormData({
+                          name: member.name,
+                          role: member.role,
+                          description: member.description,
+                          image: null,
+                          linkedin: member.socialLinks.linkedin,
+                          twitter: member.socialLinks.twitter,
+                          github: member.socialLinks.github,
+                        })
+                      }}
+                      className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(member._id)}
+                      className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </div>
-              <div>
-                <label className="block text-sm mb-2">Role</label>
-                <input
-                  type="text"
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full bg-white p-2 rounded border"
-                  required
-                />
+
+              {/* Member info */}
+              <div className="mt-4 md:mt-6 relative z-[2]">
+                <h3 className="text-lg md:text-xl font-bold font-sans text-gray-900">{member.name}</h3>
+                <p className="text-sm md:text-base text-gray-700 font-light mt-1">{member.role}</p>
               </div>
-              <div>
-                <label className="block text-sm mb-2">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full bg-white p-2 rounded border"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-2">Image</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
-                  className="w-full bg-white p-2 rounded border"
-                  required={!editingMember}
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-2">LinkedIn URL</label>
-                <input
-                  type="url"
-                  value={formData.linkedin}
-                  onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                  className="w-full bg-white p-2 rounded border"
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-2">Twitter URL</label>
-                <input
-                  type="url"
-                  value={formData.twitter}
-                  onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
-                  className="w-full bg-white p-2 rounded border"
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-2">GitHub URL</label>
-                <input
-                  type="url"
-                  value={formData.github}
-                  onChange={(e) => setFormData({ ...formData, github: e.target.value })}
-                  className="w-full bg-white p-2 rounded border"
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
-                >
-                  {editingMember ? 'Update' : 'Create'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditing(false)
-                    setEditingMember(null)
-                  }}
-                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div 
-        ref={scrollContainerRef}
-        className="flex overflow-x-auto hide-scrollbar gap-6 md:gap-12 lg:gap-24 px-4 md:px-8 lg:px-12 pb-8 md:pb-10 snap-x snap-mandatory"
-        style={{
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-          WebkitOverflowScrolling: "touch",
+      {/* Edit Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          setEditingMember(null)
+          setFormData({
+            name: '',
+            role: '',
+            description: '',
+            image: null,
+            linkedin: '',
+            twitter: '',
+            github: '',
+          })
         }}
+        title={editingMember ? 'Edit Team Member' : 'Add New Team Member'}
       >
-        {teamMembers.map((member, index) => (
-          <div 
-            key={member._id}
-            className="relative flex-shrink-0 snap-start"
-            style={{ width: "280px", maxWidth: "100vw - 2rem" }}
-            onMouseEnter={() => setActiveIndex(index)}
-            onMouseLeave={() => setActiveIndex(null)}
-          >
-            <div className="relative">
-              {/* Pink blob decoration that appears on hover */}
-              {activeIndex === index &&
-                <>
-                  <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1.5, opacity: 0.7 }}
-                    transition={{ 
-                      duration: 0.7,
-                      ease: [0.32, 0, 0.67, 0]
-                    }}
-                    className="absolute -left-1/2 top-0 w-full mt-10 h-full z-[1]"
-                    style={{ 
-                      background: "radial-gradient(circle at center, #FF69B4 0%, transparent 70%)",
-                      filter: "blur(40px)",
-                      transform: "translate(-20%, 20%)",
-                      pointerEvents: "none"
-                    }}
-                  />
-                  <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1.2, opacity: 0.5 }}
-                    transition={{ 
-                      duration: 0.8,
-                      ease: [0.32, 0, 0.67, 0],
-                      delay: 0.1
-                    }}
-                    className="absolute -right-1/2 top-1/4 w-full h-full z-[1]"
-                    style={{ 
-                      background: "radial-gradient(circle at center, #FF69B4 0%, transparent 70%)",
-                      filter: "blur(45px)",
-                      transform: "translate(20%, 20%)",
-                      pointerEvents: "none"
-                    }}
-                  />
-                </>
-              }
-
-              {/* Location and Social Links */}
-              <div className="absolute -right-2 md:-right-6 top-0 z-[3] h-full flex flex-col items-center justify-start pt-4 gap-3">
-                {/* Social Links */}
-                <div className="flex flex-col gap-4 mt-16 md:mt-20">
-                  {member.socialLinks.linkedin && (
-                    <a 
-                      href={member.socialLinks.linkedin}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-gray-700 hover:text-gray-900 transition-colors"
-                    >
-                      <FaLinkedin className="w-3 h-3 md:w-4 md:h-4" />
-                    </a>
-                  )}
-                  {member.socialLinks.twitter && (
-                    <a 
-                      href={member.socialLinks.twitter}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-gray-700 hover:text-gray-900 transition-colors"
-                    >
-                      <FaTwitter className="w-3 h-3 md:w-4 md:h-4" />
-                    </a>
-                  )}
-                  {member.socialLinks.github && (
-                    <a 
-                      href={member.socialLinks.github}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-gray-700 hover:text-gray-900 transition-colors"
-                    >
-                      <FaGithub className="w-3 h-3 md:w-4 md:h-4" />
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              {/* Main image container */}
-              <div className="relative z-[2] aspect-[3/4] overflow-hidden">
-                <Image
-                  src={`/api/team/${member._id}/image`}
-                  alt={member.name}
-                  fill
-                  className="object-cover filter grayscale hover:scale-105 transition-transform duration-700"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  priority
-                />
-              </div>
-
-              {/* Black overlay with quote on hover */}
-              {activeIndex === index && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className="absolute left-0 top-0 w-[90%] h-full bg-black p-4 md:p-8 flex items-center z-[2]"
-                >
-                  <p className="text-base md:text-lg font-light leading-relaxed text-white">&ldquo;{member.description}&rdquo;</p>
-                </motion.div>
-              )}
-
-              {/* Admin Controls */}
-              {isAuthenticated && activeIndex === index && (
-                <div className="absolute top-4 left-4 z-[3] flex gap-2">
-                  <button
-                    onClick={() => {
-                      setIsEditing(true)
-                      setEditingMember(member)
-                      setFormData({
-                        name: member.name,
-                        role: member.role,
-                        description: member.description,
-                        image: null,
-                        linkedin: member.socialLinks.linkedin,
-                        twitter: member.socialLinks.twitter,
-                        github: member.socialLinks.github,
-                      })
-                    }}
-                    className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(member._id)}
-                    className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600 transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Member info */}
-            <div className="mt-4 md:mt-6 relative z-[2]">
-              <h3 className="text-lg md:text-xl font-bold font-sans text-gray-900">{member.name}</h3>
-              <p className="text-sm md:text-base text-gray-700 font-light mt-1">{member.role}</p>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Name</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full bg-gray-100 dark:bg-gray-800 p-2 rounded border border-gray-300 dark:border-gray-700"
+              required
+            />
           </div>
-        ))}
-      </div>
+          <div>
+            <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Role</label>
+            <input
+              type="text"
+              value={formData.role}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              className="w-full bg-gray-100 dark:bg-gray-800 p-2 rounded border border-gray-300 dark:border-gray-700"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full bg-gray-100 dark:bg-gray-800 p-2 rounded border border-gray-300 dark:border-gray-700"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
+              className="w-full bg-gray-100 dark:bg-gray-800 p-2 rounded border border-gray-300 dark:border-gray-700"
+              required={!editingMember}
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">LinkedIn URL</label>
+            <input
+              type="url"
+              value={formData.linkedin}
+              onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+              className="w-full bg-gray-100 dark:bg-gray-800 p-2 rounded border border-gray-300 dark:border-gray-700"
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Twitter URL</label>
+            <input
+              type="url"
+              value={formData.twitter}
+              onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+              className="w-full bg-gray-100 dark:bg-gray-800 p-2 rounded border border-gray-300 dark:border-gray-700"
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">GitHub URL</label>
+            <input
+              type="url"
+              value={formData.github}
+              onChange={(e) => setFormData({ ...formData, github: e.target.value })}
+              className="w-full bg-gray-100 dark:bg-gray-800 p-2 rounded border border-gray-300 dark:border-gray-700"
+            />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button
+              type="submit"
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+            >
+              {editingMember ? 'Update' : 'Create'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsModalOpen(false)
+                setEditingMember(null)
+                setFormData({
+                  name: '',
+                  role: '',
+                  description: '',
+                  image: null,
+                  linkedin: '',
+                  twitter: '',
+                  github: '',
+                })
+              }}
+              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Modal>
     </section>
   )
 }

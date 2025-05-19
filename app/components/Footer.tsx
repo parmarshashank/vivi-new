@@ -1,9 +1,11 @@
 'use client';
 import { useState } from 'react';
 import LoginModal from './LoginModal';
+import { useAuth } from '../context/AuthContext';
 
 const Footer = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
 
   return (
     <footer className="bg-[#111111] border-t border-gray-800">
@@ -14,14 +16,23 @@ const Footer = () => {
             © {new Date().getFullYear()} Vividhata. All rights reserved.
           </div>
 
-          {/* Center - Admin Login */}
+          {/* Center - Admin Login/Logout */}
           <div className="order-first md:order-none mb-6 md:mb-0">
-            <button
-              onClick={() => setIsLoginModalOpen(true)}
-              className="text-gray-400 hover:text-white transition-colors text-sm font-light"
-            >
-              Are you an admin? Login here
-            </button>
+            {isAuthenticated ? (
+              <button
+                onClick={logout}
+                className="text-gray-400 hover:text-white transition-colors text-sm font-light"
+              >
+                Logout
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsLoginModalOpen(true)}
+                className="text-gray-400 hover:text-white transition-colors text-sm font-light"
+              >
+                Are you an admin? Login here
+              </button>
+            )}
           </div>
 
           {/* Right side - Additional Links */}

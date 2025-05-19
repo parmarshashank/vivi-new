@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useAuth } from '../context/AuthContext';
+import Modal from './Modal';
 
 interface GalleryItem {
   _id: string;
@@ -20,7 +21,7 @@ const Gallery = () => {
   const { isAuthenticated, token } = useAuth();
 
   // Form states for adding/editing
-  const [isEditing, setIsEditing] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -73,7 +74,7 @@ const Gallery = () => {
       if (!response.ok) throw new Error('Failed to save item');
       
       await fetchGalleryItems();
-      setIsEditing(false);
+      setIsModalOpen(false);
       setEditingItem(null);
       setFormData({ title: '', description: '', image: null });
     } catch (err) {
@@ -155,7 +156,7 @@ const Gallery = () => {
             <div className="mb-8">
               <button
                 onClick={() => {
-                  setIsEditing(true);
+                  setIsModalOpen(true);
                   setEditingItem(null);
                   setFormData({ title: '', description: '', image: null });
                 }}
@@ -163,62 +164,6 @@ const Gallery = () => {
               >
                 Add New Item
               </button>
-            </div>
-          )}
-
-          {/* Edit Form */}
-          {isAuthenticated && isEditing && (
-            <div className="mb-8 bg-gray-900 p-6 rounded">
-              <h3 className="text-xl mb-4">{editingItem ? 'Edit Item' : 'Add New Item'}</h3>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm mb-2">Title</label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full bg-gray-800 p-2 rounded"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm mb-2">Description</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full bg-gray-800 p-2 rounded"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm mb-2">Image</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
-                    className="w-full bg-gray-800 p-2 rounded"
-                    required={!editingItem}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="bg-green-500 text-black px-4 py-2 rounded hover:bg-green-600 transition-colors"
-                  >
-                    {editingItem ? 'Update' : 'Create'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditing(false);
-                      setEditingItem(null);
-                    }}
-                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
             </div>
           )}
 
@@ -256,7 +201,7 @@ const Gallery = () => {
                     <div className="mb-8 flex gap-2">
                       <button
                         onClick={() => {
-                          setIsEditing(true);
+                          setIsModalOpen(true);
                           setEditingItem(galleryItems[currentIndex]);
                           setFormData({
                             title: galleryItems[currentIndex].title,
@@ -278,7 +223,7 @@ const Gallery = () => {
                   )}
                   
                   {/* Navigation */}
-                  <div className="flex justify-between items-center mt-auto">
+                  <div className="flex items-center justify-between">
                     <button 
                       onClick={prevSlide}
                       className="text-gray-400 hover:text-white transition-colors"
@@ -307,6 +252,68 @@ const Gallery = () => {
               </div>
             </div>
           )}
+
+          {/* Edit Modal */}
+          <Modal
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setEditingItem(null);
+              setFormData({ title: '', description: '', image: null });
+            }}
+            title={editingItem ? 'Edit Gallery Item' : 'Add New Gallery Item'}
+          >
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Title</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full bg-gray-100 dark:bg-gray-800 p-2 rounded border border-gray-300 dark:border-gray-700"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full bg-gray-100 dark:bg-gray-800 p-2 rounded border border-gray-300 dark:border-gray-700"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
+                  className="w-full bg-gray-100 dark:bg-gray-800 p-2 rounded border border-gray-300 dark:border-gray-700"
+                  required={!editingItem}
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button
+                  type="submit"
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+                >
+                  {editingItem ? 'Update' : 'Create'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setEditingItem(null);
+                    setFormData({ title: '', description: '', image: null });
+                  }}
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </Modal>
         </div>
       </div>
     </section>
