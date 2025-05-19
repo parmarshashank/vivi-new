@@ -2,13 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Gallery from '@/models/Gallery';
 
+type RouteContext = {
+  params: {
+    id: string;
+  };
+};
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
     await connectDB();
-    const item = await Gallery.findById(params.id);
+    const item = await Gallery.findById(context.params.id);
     
     if (!item) {
       return NextResponse.json(

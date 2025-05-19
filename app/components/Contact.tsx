@@ -84,17 +84,16 @@ const Contact = () => {
               <div>
                 <h3 className="text-base md:text-lg mb-2 font-medium">Visit</h3>
                 <p className="text-gray-400 font-light text-sm md:text-base">
-                  123 Creative Avenue<br />
-                  Design District<br />
-                  Mumbai, India
+                  GL Bajaj Institute of Technology and Management<br />
+                  Greater Noida, Uttar Pradesh<br />
+                  India
                 </p>
               </div>
 
               <div>
                 <h3 className="text-base md:text-lg mb-2 font-medium">Contact</h3>
                 <p className="text-gray-400 font-light text-sm md:text-base">
-                  contact@vividhata.com<br />
-                  +91 98765 43210
+                vividhata@glbitm.ac.in<br />
                 </p>
               </div>
             </div>
@@ -103,9 +102,8 @@ const Contact = () => {
               <div className="flex flex-row lg:flex-col items-start lg:items-end gap-6 md:gap-8">
                 <h3 className="text-base md:text-lg mb-0 lg:mb-2 font-medium">Follow</h3>
                 <div className="flex flex-row lg:flex-col items-center lg:items-end gap-6 md:gap-4">
-                  <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm md:text-base">Instagram</a>
-                  <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm md:text-base">Twitter</a>
-                  <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm md:text-base">LinkedIn</a>
+                  <a href="https://www.instagram.com/vividhata.club.glbajaj/" className="text-gray-400 hover:text-white transition-colors text-sm md:text-base">Instagram</a>
+                  <a href="https://www.linkedin.com/in/vividhata-club-54884b331/" className="text-gray-400 hover:text-white transition-colors text-sm md:text-base">LinkedIn</a>
                 </div>
               </div>
             </div>
