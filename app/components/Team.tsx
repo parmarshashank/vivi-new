@@ -1,8 +1,6 @@
 "use client"
 import { useState, useRef, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { motion } from "framer-motion"
-import { FaLinkedin, FaTwitter, FaGithub } from "react-icons/fa"
 import Image from 'next/image'
 import { useAuth } from '../context/AuthContext'
 import Modal from './Modal'
@@ -55,7 +53,7 @@ const Team = () => {
       const data = await response.json()
       setTeamMembers(data)
       setIsLoading(false)
-    } catch (err) {
+    } catch (error) {
       setError('Failed to load team members')
       setIsLoading(false)
     }
@@ -103,7 +101,7 @@ const Team = () => {
         twitter: '',
         github: '',
       })
-    } catch (err) {
+    } catch (error) {
       setError('Failed to save member')
     }
   }
@@ -124,7 +122,7 @@ const Team = () => {
       if (!response.ok) throw new Error('Failed to delete member')
       
       await fetchTeamMembers()
-    } catch (err) {
+    } catch (error) {
       setError('Failed to delete member')
     }
   }
