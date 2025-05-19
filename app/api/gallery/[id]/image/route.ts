@@ -8,23 +8,21 @@ export async function GET(
 ) {
   try {
     await connectDB();
-    const { id } = params;
+    const item = await Gallery.findById(params.id);
     
-    const item = await Gallery.findById(id);
-    if (!item || !item.image) {
+    if (!item) {
       return NextResponse.json(
-        { message: 'Image not found' },
+        { error: 'Gallery item not found' },
         { status: 404 }
       );
     }
 
-    const response = new NextResponse(item.image.data);
-    response.headers.set('Content-Type', item.image.contentType);
-    return response;
-  } catch (error) {
-    console.error('Gallery image GET error:', error);
+    // Return the image path
+    return NextResponse.json({ imagePath: item.image });
+  } catch (error: unknown) {
+    console.error('Error fetching gallery image:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { error: 'Failed to fetch gallery image' },
       { status: 500 }
     );
   }
