@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Gallery from '@/models/Gallery';
 import { withAuth } from '@/middleware/auth';
+import { writeFile } from 'fs/promises';
+import path from 'path';
 
 // Get all gallery items
 export async function GET() {
@@ -9,10 +11,10 @@ export async function GET() {
     await connectDB();
     const items = await Gallery.find().sort({ order: 1 }).select('-image.data');
     return NextResponse.json(items);
-  } catch (error) {
-    console.error('Gallery GET error:', error);
+  } catch (error: unknown) {
+    console.error('Error fetching gallery items:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { error: 'Failed to fetch gallery items' },
       { status: 500 }
     );
   }
@@ -25,37 +27,35 @@ export const POST = withAuth(async (request: NextRequest) => {
     const formData = await request.formData();
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
-    const imageFile = formData.get('image') as File;
+    const image = formData.get('image') as File;
     
-    if (!title || !description || !imageFile) {
+    if (!title || !description || !image) {
       return NextResponse.json(
-        { message: 'All fields are required' },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    const imageBuffer = await imageFile.arrayBuffer();
-    
-    // Get the highest order number and add 1
-    const highestOrder = await Gallery.findOne().sort({ order: -1 });
-    const newOrder = (highestOrder?.order || 0) + 1;
-    
-    const newItem = await Gallery.create({
+    // Save image to public directory
+    const bytes = await image.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const imagePath = `/uploads/gallery/${Date.now()}-${image.name}`;
+    const fullPath = path.join(process.cwd(), 'public', imagePath);
+    await writeFile(fullPath, buffer);
+
+    // Create gallery item
+    const item = await Gallery.create({
       title,
       description,
-      image: {
-        data: Buffer.from(imageBuffer),
-        contentType: imageFile.type,
-      },
-      order: newOrder,
+      image: imagePath,
+      order: await Gallery.countDocuments(),
     });
 
-    const itemWithoutImage = { ...newItem.toObject(), image: undefined };
-    return NextResponse.json(itemWithoutImage, { status: 201 });
-  } catch (error) {
-    console.error('Gallery POST error:', error);
+    return NextResponse.json(item);
+  } catch (error: unknown) {
+    console.error('Error creating gallery item:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { error: 'Failed to create gallery item' },
       { status: 500 }
     );
   }
@@ -69,39 +69,48 @@ export const PUT = withAuth(async (request: NextRequest) => {
     const id = formData.get('id') as string;
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
-    const imageFile = formData.get('image') as File | null;
+    const image = formData.get('image') as File | null;
     
-    const updateData: any = {
+    if (!id || !title || !description) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    const updateData: { title: string; description: string; image?: string } = {
       title,
       description,
     };
 
-    if (imageFile) {
-      const imageBuffer = await imageFile.arrayBuffer();
-      updateData.image = {
-        data: Buffer.from(imageBuffer),
-        contentType: imageFile.type,
-      };
+    if (image) {
+      // Save new image
+      const bytes = await image.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const imagePath = `/uploads/gallery/${Date.now()}-${image.name}`;
+      const fullPath = path.join(process.cwd(), 'public', imagePath);
+      await writeFile(fullPath, buffer);
+      updateData.image = imagePath;
     }
     
-    const updatedItem = await Gallery.findByIdAndUpdate(
+    const item = await Gallery.findByIdAndUpdate(
       id,
       updateData,
       { new: true }
     ).select('-image.data');
     
-    if (!updatedItem) {
+    if (!item) {
       return NextResponse.json(
-        { message: 'Item not found' },
+        { error: 'Gallery item not found' },
         { status: 404 }
       );
     }
     
-    return NextResponse.json(updatedItem);
-  } catch (error) {
-    console.error('Gallery PUT error:', error);
+    return NextResponse.json(item);
+  } catch (error: unknown) {
+    console.error('Error updating gallery item:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { error: 'Failed to update gallery item' },
       { status: 500 }
     );
   }
@@ -113,26 +122,27 @@ export const DELETE = withAuth(async (request: NextRequest) => {
     await connectDB();
     const { id } = await request.json();
     
-    const deletedItem = await Gallery.findByIdAndDelete(id);
-    
-    if (!deletedItem) {
+    if (!id) {
       return NextResponse.json(
-        { message: 'Item not found' },
+        { error: 'Missing gallery item ID' },
+        { status: 400 }
+      );
+    }
+
+    const item = await Gallery.findByIdAndDelete(id);
+    
+    if (!item) {
+      return NextResponse.json(
+        { error: 'Gallery item not found' },
         { status: 404 }
       );
     }
     
-    // Reorder remaining items
-    const remainingItems = await Gallery.find({ order: { $gt: deletedItem.order } });
-    for (const item of remainingItems) {
-      await Gallery.findByIdAndUpdate(item._id, { order: item.order - 1 });
-    }
-    
-    return NextResponse.json({ message: 'Item deleted successfully' });
-  } catch (error) {
-    console.error('Gallery DELETE error:', error);
+    return NextResponse.json({ message: 'Gallery item deleted successfully' });
+  } catch (error: unknown) {
+    console.error('Error deleting gallery item:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { error: 'Failed to delete gallery item' },
       { status: 500 }
     );
   }

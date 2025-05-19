@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Team from '@/models/Team';
 import { withAuth } from '@/middleware/auth';
+import { writeFile } from 'fs/promises';
+import path from 'path';
 
 // Get all team members
 export async function GET() {
@@ -9,10 +11,10 @@ export async function GET() {
     await connectDB();
     const members = await Team.find().sort({ order: 1 }).select('-image.data');
     return NextResponse.json(members);
-  } catch (error) {
-    console.error('Team GET error:', error);
+  } catch (error: unknown) {
+    console.error('Error fetching team members:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { error: 'Failed to fetch team members' },
       { status: 500 }
     );
   }
@@ -33,13 +35,18 @@ export const POST = withAuth(async (request: NextRequest) => {
     
     if (!name || !role || !description || !imageFile) {
       return NextResponse.json(
-        { message: 'Required fields are missing' },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    const imageBuffer = await imageFile.arrayBuffer();
-    
+    // Save image to public directory
+    const bytes = await imageFile.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const imagePath = `/uploads/team/${Date.now()}-${imageFile.name}`;
+    const fullPath = path.join(process.cwd(), 'public', imagePath);
+    await writeFile(fullPath, buffer);
+
     // Get the highest order number and add 1
     const highestOrder = await Team.findOne().sort({ order: -1 });
     const newOrder = (highestOrder?.order || 0) + 1;
@@ -48,10 +55,7 @@ export const POST = withAuth(async (request: NextRequest) => {
       name,
       role,
       description,
-      image: {
-        data: Buffer.from(imageBuffer),
-        contentType: imageFile.type,
-      },
+      image: imagePath,
       socialLinks: {
         linkedin,
         twitter,
@@ -62,10 +66,10 @@ export const POST = withAuth(async (request: NextRequest) => {
 
     const memberWithoutImage = { ...newMember.toObject(), image: undefined };
     return NextResponse.json(memberWithoutImage, { status: 201 });
-  } catch (error) {
-    console.error('Team POST error:', error);
+  } catch (error: unknown) {
+    console.error('Error creating team member:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { error: 'Failed to create team member' },
       { status: 500 }
     );
   }
@@ -85,7 +89,24 @@ export const PUT = withAuth(async (request: NextRequest) => {
     const twitter = formData.get('twitter') as string;
     const github = formData.get('github') as string;
     
-    const updateData: any = {
+    if (!id || !name || !role || !description) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    const updateData: {
+      name: string;
+      role: string;
+      description: string;
+      image?: string;
+      socialLinks: {
+        linkedin: string;
+        twitter: string;
+        github: string;
+      };
+    } = {
       name,
       role,
       description,
@@ -97,11 +118,13 @@ export const PUT = withAuth(async (request: NextRequest) => {
     };
 
     if (imageFile) {
-      const imageBuffer = await imageFile.arrayBuffer();
-      updateData.image = {
-        data: Buffer.from(imageBuffer),
-        contentType: imageFile.type,
-      };
+      // Save new image
+      const bytes = await imageFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const imagePath = `/uploads/team/${Date.now()}-${imageFile.name}`;
+      const fullPath = path.join(process.cwd(), 'public', imagePath);
+      await writeFile(fullPath, buffer);
+      updateData.image = imagePath;
     }
     
     const updatedMember = await Team.findByIdAndUpdate(
@@ -112,16 +135,16 @@ export const PUT = withAuth(async (request: NextRequest) => {
     
     if (!updatedMember) {
       return NextResponse.json(
-        { message: 'Member not found' },
+        { error: 'Team member not found' },
         { status: 404 }
       );
     }
     
     return NextResponse.json(updatedMember);
-  } catch (error) {
-    console.error('Team PUT error:', error);
+  } catch (error: unknown) {
+    console.error('Error updating team member:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { error: 'Failed to update team member' },
       { status: 500 }
     );
   }
@@ -133,11 +156,18 @@ export const DELETE = withAuth(async (request: NextRequest) => {
     await connectDB();
     const { id } = await request.json();
     
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Missing team member ID' },
+        { status: 400 }
+      );
+    }
+
     const deletedMember = await Team.findByIdAndDelete(id);
     
     if (!deletedMember) {
       return NextResponse.json(
-        { message: 'Member not found' },
+        { error: 'Team member not found' },
         { status: 404 }
       );
     }
@@ -148,11 +178,11 @@ export const DELETE = withAuth(async (request: NextRequest) => {
       await Team.findByIdAndUpdate(member._id, { order: member.order - 1 });
     }
     
-    return NextResponse.json({ message: 'Member deleted successfully' });
-  } catch (error) {
-    console.error('Team DELETE error:', error);
+    return NextResponse.json({ message: 'Team member deleted successfully' });
+  } catch (error: unknown) {
+    console.error('Error deleting team member:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { error: 'Failed to delete team member' },
       { status: 500 }
     );
   }

@@ -62,10 +62,8 @@ const About = () => {
             </div>
             
             <div className="space-y-4 md:space-y-6 text-gray-300 font-light">
-              <p className="text-lg md:text-xl leading-relaxed">
-                Vividhata is more than just a club - it's a celebration of diversity and creativity. 
-                Founded with the vision to bring together passionate individuals, we create a space 
-                where cultural boundaries dissolve and artistic expression flourishes.
+              <p className="text-lg md:text-xl mt-2 font-light text-gray-700">
+                Vividhata isn&apos;t just a community; it&apos;s a celebration of diversity and creativity. We believe in the power of different perspectives coming together to create something extraordinary. Our community is built on the foundation of open dialogue, where every voice matters and every idea has the potential to spark innovation.
               </p>
               
               <p className="text-base md:text-lg">
