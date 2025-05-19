@@ -58,7 +58,7 @@ const About = () => {
           <div className="space-y-6 md:space-y-8 relative z-10 order-last lg:order-first">
             <div>
               <h2 className="section-title text-2xl md:text-3xl lg:text-4xl">About Vividhata</h2>
-              <span className="date-stamp text-sm md:text-base">Est. 2020</span>
+              <span className="date-stamp text-sm md:text-base">Est. 2024</span>
             </div>
             
             <div className="space-y-4 md:space-y-6 text-gray-300 font-light">

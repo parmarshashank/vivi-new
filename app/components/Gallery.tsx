@@ -41,7 +41,8 @@ const Gallery = () => {
       const data = await response.json();
       setGalleryItems(data);
       setIsLoading(false);
-    } catch (err) {
+    } catch (error) {
+      console.error('Error fetching gallery items:', error);
       setError('Failed to load gallery items');
       setIsLoading(false);
     }
@@ -77,7 +78,8 @@ const Gallery = () => {
       setIsModalOpen(false);
       setEditingItem(null);
       setFormData({ title: '', description: '', image: null });
-    } catch (err) {
+    } catch (error) {
+      console.error('Error saving gallery item:', error);
       setError('Failed to save item');
     }
   };
@@ -98,7 +100,8 @@ const Gallery = () => {
       if (!response.ok) throw new Error('Failed to delete item');
       
       await fetchGalleryItems();
-    } catch (err) {
+    } catch (error) {
+      console.error('Error deleting gallery item:', error);
       setError('Failed to delete item');
     }
   };

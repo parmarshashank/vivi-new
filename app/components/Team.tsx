@@ -54,6 +54,7 @@ const Team = () => {
       setTeamMembers(data)
       setIsLoading(false)
     } catch (error) {
+      console.error('Error fetching team members:', error)
       setError('Failed to load team members')
       setIsLoading(false)
     }
@@ -102,6 +103,7 @@ const Team = () => {
         github: '',
       })
     } catch (error) {
+      console.error('Error saving team member:', error)
       setError('Failed to save member')
     }
   }
@@ -123,6 +125,7 @@ const Team = () => {
       
       await fetchTeamMembers()
     } catch (error) {
+      console.error('Error deleting team member:', error)
       setError('Failed to delete member')
     }
   }
