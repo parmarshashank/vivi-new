@@ -62,7 +62,7 @@ const About = () => {
             </div>
             
             <div className="space-y-4 md:space-y-6 text-gray-300 font-light">
-              <p className="text-lg md:text-xl mt-2 font-light text-gray-700">
+              <p className="text-lg md:text-xl mt-2 font-light text-gray-300">
                 Vividhata isn&apos;t just a community; it&apos;s a celebration of diversity and creativity. We believe in the power of different perspectives coming together to create something extraordinary. Our community is built on the foundation of open dialogue, where every voice matters and every idea has the potential to spark innovation.
               </p>
               
