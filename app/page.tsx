@@ -4,8 +4,7 @@ import Team from './components/Team';
 import Gallery from './components/Gallery';
 import Contact from './components/Contact';
 import About from './components/About';
-
-
+import Footer from './components/Footer';
 
 export default function Home() {
   return (
@@ -16,6 +15,7 @@ export default function Home() {
       <Team />
       <Gallery />
       <Contact />
+      <Footer />
     </main>
   );
 }
